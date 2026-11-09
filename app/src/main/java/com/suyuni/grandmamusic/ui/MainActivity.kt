@@ -37,6 +37,7 @@ class MainActivity : BaseActivity() {
     private lateinit var listBox: LinearLayout
     private lateinit var barTitle: TextView
     private lateinit var barButton: TextView
+    private lateinit var barSong: TextView
     private var settingsButton: TextView? = null
     private val handler = Handler(Looper.getMainLooper())
     private val openSettings = Runnable { startActivity(Intent(this, SettingsActivity::class.java)) }
@@ -45,7 +46,7 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
-        PlayerState.ensureInit(prefs.currentPlaylistId)
+        PlayerState.ensureInit(prefs.currentPlaylistId, prefs.currentSongTitle)
 
         val root = Ui.vertical(this).apply {
             setBackgroundColor(Ui.BG)
@@ -68,10 +69,15 @@ class MainActivity : BaseActivity() {
             background = Ui.shape(context, Ui.INK, 28)
             setPadding(dp(22), dp(16), dp(16), dp(16))
         }
-        barTitle = Ui.text(this, "", 30f, true, Color.WHITE).apply { maxLines = 1 }
+        // 왼쪽: "찬송가 재생 중" + 그 아래 작은 글씨로 노래 제목
+        val barTexts = Ui.vertical(this, 2)
+        barTitle = Ui.text(this, "", 30f, true, Color.WHITE).apply { maxLines = 1; gravity = Gravity.CENTER_VERTICAL }
         TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(barTitle, 14, 32, 1, TypedValue.COMPLEX_UNIT_SP)
-        bar.addView(barTitle, LinearLayout.LayoutParams(0, dp(56), 1f))
-        barTitle.gravity = Gravity.CENTER_VERTICAL
+        barTexts.addView(barTitle, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(46)))
+        barSong = Ui.text(this, "", 20f, false, Color.parseColor("#D4D4D4")).apply { maxLines = 1; gravity = Gravity.CENTER_VERTICAL }
+        TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(barSong, 12, 20, 1, TypedValue.COMPLEX_UNIT_SP)
+        barTexts.addView(barSong, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(30)))
+        bar.addView(barTexts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         barButton = Ui.text(this, "", 24f, true).apply {
             gravity = Gravity.CENTER
             setPadding(dp(18), 0, dp(18), 0)
@@ -145,7 +151,7 @@ class MainActivity : BaseActivity() {
         listBox.removeAllViews()
         lists.forEach { listBox.addView(card(it, it.id == state.playlistId, s)) }
         if (lists.isEmpty()) {
-            listBox.addView(Ui.text(this, "가족 설정에서 노래를 넣어주세요", 22f * s, true, Ui.SUB))
+            listBox.addView(Ui.text(this, "아직 노래가 없어요 ㅠㅠ 수윤이한테 넣어달라고 말해보세요!", 22f * s, true, Ui.SUB))
         }
 
         val current = all.firstOrNull { it.id == state.playlistId }
@@ -154,6 +160,9 @@ class MainActivity : BaseActivity() {
             state.playing -> "${current.name} 재생 중"
             else -> "${current.name} 멈춤"
         }
+        val song = state.songTitle?.takeIf { current != null && it.isNotBlank() }
+        barSong.text = song ?: ""
+        barSong.visibility = if (song != null) android.view.View.VISIBLE else android.view.View.GONE
         barButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24f * s)
         if (state.playing) {
             barButton.text = "노래\n끄기"
@@ -189,7 +198,7 @@ class MainActivity : BaseActivity() {
 
     private fun playPlaylist(p: Playlist) {
         if (p.songs.isEmpty()) {
-            Toast.makeText(this, "아직 노래가 없어요. 가족 설정에서 넣어주세요.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "아직 노래가 없어요 ㅠㅠ 수윤이한테 넣어달라고 말해보세요!", Toast.LENGTH_LONG).show()
             return
         }
         PlaybackService.startPlay(this, p.id)
@@ -203,7 +212,7 @@ class MainActivity : BaseActivity() {
             val p = Repository.get(this, state.playlistId)
                 ?: Repository.load(this).firstOrNull { it.showOnWidget && it.songs.isNotEmpty() }
             if (p == null || p.songs.isEmpty()) {
-                Toast.makeText(this, "위에서 노래 종류를 먼저 골라주세요", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "아직 노래가 없어요 ㅠㅠ 수윤이한테 넣어달라고 말해보세요!", Toast.LENGTH_LONG).show()
             } else {
                 PlaybackService.startPlay(this, p.id)
             }

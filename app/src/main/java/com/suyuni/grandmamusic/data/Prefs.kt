@@ -40,6 +40,11 @@ class Prefs(ctx: Context) {
         get() = sp.getString("current", null)
         set(v) = sp.edit().putString("current", v).apply()
 
+    /** 마지막으로 나온 노래 제목 (앱을 다시 켰을 때 보여주려고) */
+    var currentSongTitle: String?
+        get() = sp.getString("currentSong", null)
+        set(v) = sp.edit().putString("currentSong", v).apply()
+
     fun savePosition(playlistId: String, index: Int, positionMs: Long) {
         sp.edit().putInt("pos_idx_$playlistId", index).putLong("pos_ms_$playlistId", positionMs).apply()
     }

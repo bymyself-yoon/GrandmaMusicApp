@@ -93,6 +93,7 @@ class PlaybackService : MediaSessionService() {
                 // (같은 알림 번호를 써서 Media3 알림이 이 자리를 그대로 덮어씀)
                 goForeground()
                 if (!play(intent.getStringExtra(EXTRA_PLAYLIST_ID))) {
+                    android.widget.Toast.makeText(this, "아직 노래가 없어요 ㅠㅠ 수윤이한테 넣어달라고 말해보세요!", android.widget.Toast.LENGTH_LONG).show()
                     if (player.isPlaying) {
                         refreshNotification() // 다른 노래가 나오는 중이면 알림을 원래대로
                     } else {
@@ -198,7 +199,9 @@ class PlaybackService : MediaSessionService() {
         val playing = player.playWhenReady &&
             player.playbackState != Player.STATE_ENDED &&
             player.mediaItemCount > 0
-        PlayerState.set(loadedPlaylistId ?: prefs.currentPlaylistId, playing)
+        val song = player.currentMediaItem?.mediaMetadata?.title?.toString()
+        if (song != null) prefs.currentSongTitle = song
+        PlayerState.set(loadedPlaylistId ?: prefs.currentPlaylistId, playing, song ?: prefs.currentSongTitle)
         WidgetUpdater.updateAll(this)
     }
 

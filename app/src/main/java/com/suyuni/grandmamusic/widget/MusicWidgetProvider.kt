@@ -61,7 +61,7 @@ object WidgetUpdater {
 
     private fun build(ctx: Context): RemoteViews {
         val prefs = Prefs(ctx)
-        PlayerState.ensureInit(prefs.currentPlaylistId)
+        PlayerState.ensureInit(prefs.currentPlaylistId, prefs.currentSongTitle)
         val state = PlayerState.state.value
         val lists = Repository.widgetPlaylists(ctx)
         val all = Repository.load(ctx)
@@ -70,15 +70,36 @@ object WidgetUpdater {
         val v = RemoteViews(ctx.packageName, R.layout.widget_music)
         val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 
+        val ink = Color.parseColor("#111111")
+
+        // 글씨는 페이퍼로지로 그린 그림으로 넣어 (위젯은 앱 글꼴이 안 먹어서)
+        fun text(id: Int, s: String, sp: Float, color: Int, bold: Boolean = true, center: Boolean = false) {
+            v.setImageViewBitmap(id, WidgetText.render(ctx, s, sp, bold, center))
+            v.setInt(id, "setColorFilter", color)
+            v.setContentDescription(id, s.replace('\n', ' '))
+        }
+
         // 제목: "트로트 재생 중" / "트로트 멈춤"
-        v.setTextViewText(
+        text(
             R.id.title,
             when {
                 current == null -> "노래를 골라주세요"
                 state.playing -> "${current.name} 재생 중"
                 else -> "${current.name} 멈춤"
             },
+            34f, ink,
         )
+        // 제목 아래 작은 글씨로 지금 노래 제목
+        val song = state.songTitle?.takeIf { current != null && it.isNotBlank() }
+        if (song != null) {
+            text(R.id.song_title, song, 22f, Color.parseColor("#444444"), bold = false)
+            v.setViewVisibility(R.id.song_title, View.VISIBLE)
+        } else {
+            v.setViewVisibility(R.id.song_title, View.INVISIBLE)
+        }
+        text(R.id.play_label, "노래\n틀기", 30f, ink, center = true)
+        text(R.id.stop_label, "노래\n끄기", 30f, Color.WHITE, center = true)
+
         v.setOnClickPendingIntent(
             R.id.title,
             PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java), flags),
@@ -100,6 +121,8 @@ object WidgetUpdater {
 
         // 노래 종류 버튼 (최대 4개)
         v.setViewVisibility(R.id.empty, if (lists.isEmpty()) View.VISIBLE else View.GONE)
+        if (lists.isEmpty()) text(R.id.empty, "아직 노래가 없어요 ㅠㅠ\n수윤이한테 넣어달라고\n말해보세요!", 20f, Color.parseColor("#555555"), bold = false, center = true)
+        var chip: android.graphics.Bitmap? = null
         for (i in 0 until Repository.WIDGET_MAX) {
             val p = lists.getOrNull(i)
             if (p == null) {
@@ -110,9 +133,14 @@ object WidgetUpdater {
             val pal = Palette.entry(p.colorIndex)
             v.setViewVisibility(rowIds[i], View.VISIBLE)
             v.setInt(rowIds[i], "setBackgroundResource", if (selected) pal.widgetSelectedBg else pal.widgetBg)
-            v.setTextViewText(nameIds[i], p.name)
-            v.setTextColor(nameIds[i], if (selected) Color.WHITE else p.color)
+            text(nameIds[i], p.name, 28f, if (selected) Color.WHITE else p.color)
             v.setViewVisibility(chipIds[i], if (selected) View.VISIBLE else View.GONE)
+            if (selected) {
+                if (chip == null) chip = WidgetText.render(ctx, "고른 노래", 17f)
+                v.setImageViewBitmap(chipIds[i], chip)
+                v.setInt(chipIds[i], "setColorFilter", ink)
+                v.setContentDescription(chipIds[i], "고른 노래")
+            }
             v.setOnClickPendingIntent(
                 rowIds[i],
                 PendingIntent.getForegroundService(ctx, 10 + i, PlaybackService.playIntent(ctx, p.id), flags),

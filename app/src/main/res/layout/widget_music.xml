@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 위젯 글씨는 홈 화면 앱이 그려서 앱 글꼴(페이퍼로지)이 안 먹어.
+     그래서 글씨를 앱에서 그림(비트맵)으로 그려서 ImageView에 넣어. (WidgetText.kt) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -7,29 +9,28 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
-            android:fontFamily="@font/paperlogy"
+    <ImageView
         android:id="@+id/title"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:autoSizeMaxTextSize="36sp"
-        android:autoSizeMinTextSize="16sp"
-        android:autoSizeTextType="uniform"
-        android:ellipsize="end"
-        android:gravity="center_vertical"
-        android:maxLines="1"
+        android:layout_height="50dp"
         android:paddingStart="4dp"
         android:paddingEnd="4dp"
-        android:text="노래를 골라주세요"
-        android:textColor="#111111"
-        android:textSize="36sp"
-        android:textStyle="bold" />
+        android:scaleType="fitStart" />
+
+    <ImageView
+        android:id="@+id/song_title"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:scaleType="fitStart" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="10dp"
         android:layout_weight="3"
+        android:baselineAligned="false"
         android:orientation="horizontal">
 
         <LinearLayout
@@ -54,17 +55,12 @@
                     android:src="@drawable/ic_play_circle" />
             </FrameLayout>
 
-            <TextView
-            android:fontFamily="@font/paperlogy"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:id="@+id/play_label"
+                android:layout_width="match_parent"
+                android:layout_height="76dp"
                 android:layout_marginTop="6dp"
-                android:gravity="center"
-                android:lineSpacingMultiplier="0.95"
-                android:text="노래\n틀기"
-                android:textColor="#111111"
-                android:textSize="30sp"
-                android:textStyle="bold" />
+                android:scaleType="centerInside" />
         </LinearLayout>
 
         <FrameLayout
@@ -93,17 +89,12 @@
                     android:src="@drawable/ic_stop_x" />
             </FrameLayout>
 
-            <TextView
-            android:fontFamily="@font/paperlogy"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:id="@+id/stop_label"
+                android:layout_width="match_parent"
+                android:layout_height="76dp"
                 android:layout_marginTop="6dp"
-                android:gravity="center"
-                android:lineSpacingMultiplier="0.95"
-                android:text="노래\n끄기"
-                android:textColor="#FFFFFF"
-                android:textSize="30sp"
-                android:textStyle="bold" />
+                android:scaleType="centerInside" />
         </LinearLayout>
 
     </LinearLayout>
@@ -114,32 +105,18 @@
         android:layout_marginTop="14dp"
         android:background="@drawable/bg_divider" />
 
-    <TextView
-            android:fontFamily="@font/paperlogy"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:paddingStart="4dp"
-        android:text="노래 종류 고르기"
-        android:textColor="#333333"
-        android:textSize="20sp"
-        android:textStyle="bold" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="4"
         android:orientation="vertical">
 
-        <TextView
-            android:fontFamily="@font/paperlogy"
+        <ImageView
             android:id="@+id/empty"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="아직 노래가 없어요.\n가족 설정에서 노래를 넣어주세요."
-            android:textColor="#555555"
-            android:textSize="18sp"
+            android:padding="8dp"
+            android:scaleType="centerInside"
             android:visibility="gone" />
 
         <LinearLayout
@@ -154,35 +131,22 @@
             android:paddingStart="18dp"
             android:paddingEnd="14dp">
 
-            <TextView
-            android:fontFamily="@font/paperlogy"
+            <ImageView
                 android:id="@+id/pl_name_0"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="34dp"
                 android:layout_weight="1"
-                android:autoSizeMaxTextSize="30sp"
-                android:autoSizeMinTextSize="16sp"
-                android:autoSizeTextType="uniform"
-                android:maxLines="1"
-                android:text="재생목록"
-                android:textColor="#C2410C"
-                android:textSize="30sp"
-                android:textStyle="bold" />
+                android:scaleType="fitStart" />
 
-            <TextView
-            android:fontFamily="@font/paperlogy"
+            <ImageView
                 android:id="@+id/pl_chip_0"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_chip"
                 android:paddingStart="10dp"
-                android:paddingTop="4dp"
+                android:paddingTop="5dp"
                 android:paddingEnd="10dp"
-                android:paddingBottom="4dp"
-                android:text="고른 노래"
-                android:textColor="#111111"
-                android:textSize="17sp"
-                android:textStyle="bold"
+                android:paddingBottom="5dp"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -198,35 +162,22 @@
             android:paddingStart="18dp"
             android:paddingEnd="14dp">
 
-            <TextView
-            android:fontFamily="@font/paperlogy"
+            <ImageView
                 android:id="@+id/pl_name_1"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="34dp"
                 android:layout_weight="1"
-                android:autoSizeMaxTextSize="30sp"
-                android:autoSizeMinTextSize="16sp"
-                android:autoSizeTextType="uniform"
-                android:maxLines="1"
-                android:text="재생목록"
-                android:textColor="#C2410C"
-                android:textSize="30sp"
-                android:textStyle="bold" />
+                android:scaleType="fitStart" />
 
-            <TextView
-            android:fontFamily="@font/paperlogy"
+            <ImageView
                 android:id="@+id/pl_chip_1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_chip"
                 android:paddingStart="10dp"
-                android:paddingTop="4dp"
+                android:paddingTop="5dp"
                 android:paddingEnd="10dp"
-                android:paddingBottom="4dp"
-                android:text="고른 노래"
-                android:textColor="#111111"
-                android:textSize="17sp"
-                android:textStyle="bold"
+                android:paddingBottom="5dp"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -242,35 +193,22 @@
             android:paddingStart="18dp"
             android:paddingEnd="14dp">
 
-            <TextView
-            android:fontFamily="@font/paperlogy"
+            <ImageView
                 android:id="@+id/pl_name_2"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="34dp"
                 android:layout_weight="1"
-                android:autoSizeMaxTextSize="30sp"
-                android:autoSizeMinTextSize="16sp"
-                android:autoSizeTextType="uniform"
-                android:maxLines="1"
-                android:text="재생목록"
-                android:textColor="#C2410C"
-                android:textSize="30sp"
-                android:textStyle="bold" />
+                android:scaleType="fitStart" />
 
-            <TextView
-            android:fontFamily="@font/paperlogy"
+            <ImageView
                 android:id="@+id/pl_chip_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_chip"
                 android:paddingStart="10dp"
-                android:paddingTop="4dp"
+                android:paddingTop="5dp"
                 android:paddingEnd="10dp"
-                android:paddingBottom="4dp"
-                android:text="고른 노래"
-                android:textColor="#111111"
-                android:textSize="17sp"
-                android:textStyle="bold"
+                android:paddingBottom="5dp"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -286,35 +224,22 @@
             android:paddingStart="18dp"
             android:paddingEnd="14dp">
 
-            <TextView
-            android:fontFamily="@font/paperlogy"
+            <ImageView
                 android:id="@+id/pl_name_3"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="34dp"
                 android:layout_weight="1"
-                android:autoSizeMaxTextSize="30sp"
-                android:autoSizeMinTextSize="16sp"
-                android:autoSizeTextType="uniform"
-                android:maxLines="1"
-                android:text="재생목록"
-                android:textColor="#C2410C"
-                android:textSize="30sp"
-                android:textStyle="bold" />
+                android:scaleType="fitStart" />
 
-            <TextView
-            android:fontFamily="@font/paperlogy"
+            <ImageView
                 android:id="@+id/pl_chip_3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_chip"
                 android:paddingStart="10dp"
-                android:paddingTop="4dp"
+                android:paddingTop="5dp"
                 android:paddingEnd="10dp"
-                android:paddingBottom="4dp"
-                android:text="고른 노래"
-                android:textColor="#111111"
-                android:textSize="17sp"
-                android:textStyle="bold"
+                android:paddingBottom="5dp"
                 android:visibility="gone" />
         </LinearLayout>
 
