@@ -1,0 +1,5 @@
+/build
+# 서명 키는 절대 GitHub에 올리지 않기 (Public 저장소)
+/signing/
+*.keystore
+*.jks

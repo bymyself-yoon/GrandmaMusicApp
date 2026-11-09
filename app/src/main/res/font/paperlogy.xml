@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 페이퍼로지(Paperlogy, SIL OFL 1.1). 할머니가 읽기 쉽게 두꺼운 굵기만 써:
+     보통 글씨 = 7 Bold, 굵은 글씨(textStyle=bold) = 8 ExtraBold -->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android">
+    <font android:font="@font/paperlogy_bold" android:fontStyle="normal" android:fontWeight="400" />
+    <font android:font="@font/paperlogy_extrabold" android:fontStyle="normal" android:fontWeight="700" />
+</font-family>

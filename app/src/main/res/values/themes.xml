@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.GrandmaMusic" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@color/screen_bg</item>
+        <item name="android:statusBarColor">@color/screen_bg</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:fontFamily">@font/paperlogy</item>
+        <item name="fontFamily">@font/paperlogy</item>
+        <item name="colorAccent">#111111</item>
+        <item name="colorPrimary">#111111</item>
+    </style>
+</resources>

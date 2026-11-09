@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">손녀의 선물</string>
+    <string name="widget_name">손녀의 선물 위젯</string>
+    <string name="widget_description">노래 틀기, 노래 끄기, 노래 종류 고르기</string>
+    <string name="notification_channel">노래 재생</string>
+</resources>
