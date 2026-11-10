@@ -62,3 +62,23 @@ class SongSyncTest {
         assertTrue(SongSync.parseLfsPointer(p) != null)
     }
 }
+
+class TokenQrTest {
+    private val tok = "github_pat_11ABCDEFG0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ab"
+
+    @Test fun parsesJsonPayload() {
+        val p = TokenQr.parse("""{"v":1,"repo":"bymyself-yoon/GrandmaSongs","token":"$tok"}""")
+        assertEquals(TokenQr.Payload("bymyself-yoon/GrandmaSongs", tok), p)
+    }
+
+    @Test fun parsesPlainToken() {
+        assertEquals(TokenQr.Payload(null, tok), TokenQr.parse("  $tok \n"))
+    }
+
+    @Test fun rejectsGarbage() {
+        assertNull(TokenQr.parse("https://example.com"))
+        assertNull(TokenQr.parse("""{"repo":"a/b","token":"password123"}"""))
+        assertNull(TokenQr.parse("""{"repo":"bad repo","token":"$tok"}"""))
+        assertNull(TokenQr.parse(null))
+    }
+}

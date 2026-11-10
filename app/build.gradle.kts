@@ -7,8 +7,8 @@ plugins {
 
 // ── 업데이트 설정 ───────────────────────────────────────────
 // 새 버전을 낼 때마다 versionCode를 1씩 올려줘! (안 올리면 폰이 업데이트로 인식 안 함)
-val appVersionCode = 4
-val appVersionName = "1.2.0"
+val appVersionCode = 5
+val appVersionName = "1.2.1"
 
 // 앱이 새 버전을 확인할 주소. GitHub 저장소를 만들고 OWNER/REPO를 바꿔줘.
 // Releases에 update.json과 grandma-music.apk 두 파일을 올리면, 가족 설정의 "업데이트" 버튼이 항상 "가장 최신 Release"를 받아.
@@ -72,7 +72,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-session:1.5.1")
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0") // QR 코드로 토큰 넣기 (인터넷 없이 동작)
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
 }
 
 // ── 배포 파일 만들기 ───────────────────────────────────────────

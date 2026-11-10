@@ -93,7 +93,7 @@ object SongSync {
         if (!Regex("^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$").matches(repo)) {
             return Result.Failed("저장소 이름을 '아이디/저장소이름' 형식으로 넣어주세요")
         }
-        if (token.isEmpty()) return Result.Failed("토큰을 먼저 저장해주세요")
+        if (token.isEmpty()) return Result.Failed("먼저 QR 코드로 토큰을 넣어주세요")
         val gh = GitHub(repo, token)
 
         progress("노래 목록 확인 중…")

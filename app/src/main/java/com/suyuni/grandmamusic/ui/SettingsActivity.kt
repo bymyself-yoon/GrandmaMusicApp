@@ -16,10 +16,8 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.app.AlertDialog
 import android.net.ConnectivityManager
-import android.text.InputType
 import android.view.View
 import android.view.WindowManager
-import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -36,6 +34,9 @@ import com.suyuni.grandmamusic.data.Prefs
 import com.suyuni.grandmamusic.data.Repository
 import com.suyuni.grandmamusic.sync.SongSync
 import com.suyuni.grandmamusic.sync.SyncPrefs
+import com.suyuni.grandmamusic.sync.TokenQr
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import com.suyuni.grandmamusic.playback.PlaybackService
 import com.suyuni.grandmamusic.ui.Ui.dp
 import com.suyuni.grandmamusic.ui.Ui.marginTop
@@ -287,6 +288,20 @@ class SettingsActivity : BaseActivity() {
     }
 
     // ── 새 노래 받기 ─────────────────────────────────────────
+    private val scanTokenQr = registerForActivityResult(ScanContract()) { result ->
+        val raw = result.contents ?: return@registerForActivityResult // 취소
+        val p = TokenQr.parse(raw)
+        if (p == null) {
+            Toast.makeText(this, "토큰 QR이 아니에요. 토큰QR만들기.html로 만든 QR을 찍어주세요", Toast.LENGTH_LONG).show()
+            return@registerForActivityResult
+        }
+        val sp = SyncPrefs(this)
+        if (p.repo != null) sp.repo = p.repo
+        sp.token = p.token
+        Toast.makeText(this, "토큰을 저장했어요 (${sp.repo})", Toast.LENGTH_LONG).show()
+        rebuildKeepScroll()
+    }
+
     private var syncing = false
     private var syncProgress: TextView? = null
     private var syncMessage = ""
@@ -297,37 +312,26 @@ class SettingsActivity : BaseActivity() {
         val sp = SyncPrefs(this)
         box.addView(Ui.text(this, "비공개 GitHub 저장소의 폴더 = 재생목록, 파일 이름 = 노래 제목이에요. 저장소에서 지운 노래는 폰에서도 지워져요. (폰에서 직접 넣은 노래는 그대로)", 13f, color = Ui.SUB))
 
-        fun field(label: String, value: String, hint: String, password: Boolean): EditText {
-            box.addView(Ui.text(this, label, 15f, true))
-            val e = EditText(this).apply {
-                setText(value)
-                this.hint = hint
-                setSingleLine()
-                textSize = 15f
-                setTextColor(Ui.INK)
-                background = Ui.shape(context, Color.WHITE, 12, Color.parseColor("#9CA3AF"), 1.5)
-                setPadding(dp(12), 0, dp(12), 0)
-                contentDescription = label
-                inputType = if (password) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                else InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-            }
-            box.addView(e, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)))
-            return e
-        }
-        val repoInput = field("저장소 (아이디/저장소이름)", sp.repo, SyncPrefs.DEFAULT_REPO, false)
+        // 저장소 이름과 토큰은 PC의 "토큰QR만들기.html"로 만든 QR을 찍어서 넣어
         val saved = sp.token
-        val tokenInput = field(
-            "토큰", "",
-            if (saved.isEmpty()) "github_pat_로 시작하는 토큰 붙여넣기" else "저장됨 (…${saved.takeLast(4)}) · 바꿀 때만 입력",
-            true,
+        box.addView(Ui.text(this, "저장소: ${sp.repo}", 15f, true))
+        box.addView(
+            Ui.text(
+                this,
+                if (saved.isEmpty()) "토큰: 아직 없음" else "토큰: 저장됨 (…${saved.takeLast(4)})",
+                15f, true, if (saved.isEmpty()) Ui.DANGER else Ui.ON,
+            ),
         )
         box.addView(
-            Ui.button(this, "저장", 15f) {
-                sp.repo = repoInput.text.toString()
-                val t = tokenInput.text.toString().trim()
-                if (t.isNotEmpty()) sp.token = t
-                Toast.makeText(this, "저장했어요", Toast.LENGTH_SHORT).show()
-                rebuildKeepScroll()
+            Ui.button(this, if (saved.isEmpty()) "QR 코드로 토큰 넣기" else "QR 코드로 토큰 바꾸기", 15f) {
+                scanTokenQr.launch(
+                    ScanOptions()
+                        .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                        .setPrompt("PC 화면에 띄운 QR 코드를 네모 안에 맞춰주세요")
+                        .setBeepEnabled(false)
+                        .setOrientationLocked(true)
+                        .setCaptureActivity(PortraitCaptureActivity::class.java),
+                )
             },
         )
 
@@ -353,7 +357,7 @@ class SettingsActivity : BaseActivity() {
         if (syncing || SongSync.isRunning) return
         val sp = SyncPrefs(this)
         if (sp.token.isEmpty()) {
-            Toast.makeText(this, "토큰을 먼저 넣고 저장해주세요", Toast.LENGTH_LONG).show(); return
+            Toast.makeText(this, "먼저 'QR 코드로 토큰 넣기'를 해주세요", Toast.LENGTH_LONG).show(); return
         }
         val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         if (cm.activeNetwork == null) {
