@@ -28,7 +28,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -88,12 +87,11 @@ class SettingsActivity : BaseActivity() {
         content.removeAllViews()
 
         val head = Ui.vertical(this, 4)
-        head.addView(Ui.text(this, "← 메인 화면으로", 16f, true, Color.parseColor("#1D4ED8")).apply {
+        head.addView(Ui.text(this, "← 메인 화면으로", 14f, color = Color.parseColor("#6B7280"), light = true).apply {
             setPadding(0, dp(10), dp(10), dp(10))
             setOnClickListener { finish() }
         })
-        head.addView(Ui.text(this, "수윤이만 접근 가능!", 30f, true))
-        head.addView(Ui.text(this, "할머니 화면에는 보이지 않는 관리용 화면이에요", 15f, color = Ui.SUB))
+        head.addView(Ui.text(this, "수윤이만 접근 가능!", 26f, true).apply { setPadding(0, 0, 0, dp(6)) })
         content.addView(head)
 
         content.addView(playlistSection())
@@ -132,7 +130,7 @@ class SettingsActivity : BaseActivity() {
                 super.onSelectedChanged(vh, actionState)
                 if (actionState == ItemTouchHelper.ACTION_STATE_DRAG && vh != null) {
                     rv.parent.requestDisallowInterceptTouchEvent(true) // 끄는 동안 화면 스크롤이 끼어들지 않게
-                    vh.itemView.background = Ui.shape(this@SettingsActivity, Color.parseColor("#FEF3C7"), 10)
+                    vh.itemView.background = Ui.shape(this@SettingsActivity, Color.parseColor("#F1F1F1"), 10)
                     vh.itemView.elevation = dp(6).toFloat()
                     vh.itemView.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
                 }
@@ -181,8 +179,8 @@ class SettingsActivity : BaseActivity() {
         val row = Ui.horizontal(this, 8).apply { setPadding(0, dp(8), 0, dp(8)) }
         row.addView(TextView(this).apply { background = Ui.shape(context, p.color, 6) }, LinearLayout.LayoutParams(dp(22), dp(22)))
         val t = Ui.vertical(this)
-        t.addView(Ui.text(this, p.name, 18f, true).apply { maxLines = 1 })
-        t.addView(Ui.text(this, "노래 ${p.songs.size}곡", 13f, color = Ui.SUB))
+        t.addView(Ui.text(this, p.name, 17f, true).apply { maxLines = 1 })
+        t.addView(Ui.text(this, "노래 ${p.songs.size}곡", 13f, color = Ui.SUB, light = true))
         row.addView(t, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
 
         val lightLine = Color.parseColor("#D4D4D4")
@@ -206,7 +204,7 @@ class SettingsActivity : BaseActivity() {
                 }
             },
         )
-        row.addView(Ui.text(this, "편집", 15f, true, Color.parseColor("#1D4ED8")).apply {
+        row.addView(Ui.text(this, "편집", 15f, color = Color.parseColor("#1D4ED8"), light = true).apply {
             gravity = Gravity.CENTER
             setPadding(dp(6), dp(10), dp(2), dp(10))
             setOnClickListener {
@@ -228,12 +226,12 @@ class SettingsActivity : BaseActivity() {
     // ── 재생 방식 ─────────────────────────────────────────
     private fun playbackSection(): LinearLayout {
         val box = Ui.section(this, "재생 방식")
-        box.addView(Ui.text(this, "재생 순서", 15f, true))
+        box.addView(Ui.text(this, "재생 순서", 15f, light = true))
         box.addView(Ui.segment(this, listOf("순서대로" to false, "섞어서" to true), prefs.shuffle) {
             prefs.shuffle = it as Boolean; applyLive(); rebuildKeepScroll()
         })
-        box.addView(switchRow("다 끝나면 처음부터", "재생목록이 끝나도 멈추지 않아요", prefs.repeat) { prefs.repeat = it; applyLive() })
-        box.addView(switchRow("이어서 재생", "껐다 켜면 듣던 노래부터 나와요", prefs.resume) { prefs.resume = it })
+        box.addView(switchRow("다 끝나면 처음부터", prefs.repeat) { prefs.repeat = it; applyLive() })
+        box.addView(switchRow("껐다 켜면 이어서 재생", prefs.resume) { prefs.resume = it })
         return box
     }
 
@@ -241,22 +239,12 @@ class SettingsActivity : BaseActivity() {
         PlaybackService.instance?.applySettings()
     }
 
-    private fun switchRow(label: String, desc: String, on: Boolean, onChange: (Boolean) -> Unit): LinearLayout {
+    private fun switchRow(label: String, on: Boolean, onChange: (Boolean) -> Unit): LinearLayout {
         val row = Ui.horizontal(this, 12)
         val t = Ui.vertical(this)
-        t.addView(Ui.text(this, label, 16f, true))
-        t.addView(Ui.text(this, desc, 13f, color = Ui.SUB))
+        t.addView(Ui.text(this, label, 15f, light = true))
         row.addView(t, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        row.addView(SwitchCompat(this).apply {
-            isChecked = on
-            contentDescription = label
-            thumbTintList = Ui.tint(Color.WHITE)
-            trackTintList = android.content.res.ColorStateList(
-                arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()),
-                intArrayOf(Ui.ON, Color.parseColor("#9CA3AF")),
-            )
-            setOnCheckedChangeListener { _, v -> onChange(v) }
-        })
+        row.addView(Ui.pillSwitch(this, on, label, onChange))
         return row
     }
 
@@ -265,8 +253,8 @@ class SettingsActivity : BaseActivity() {
         val box = Ui.section(this, "소리와 화면")
 
         val volHead = Ui.horizontal(this)
-        volHead.addView(Ui.text(this, "기본 소리 크기", 16f, true), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        val volLabel = Ui.text(this, "${prefs.volumePercent}%", 16f, true)
+        volHead.addView(Ui.text(this, "기본 소리 크기", 15f, light = true), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        val volLabel = Ui.text(this, "${prefs.volumePercent}%", 15f, true)
         volHead.addView(volLabel)
         box.addView(volHead)
         box.addView(SeekBar(this).apply {
@@ -285,18 +273,16 @@ class SettingsActivity : BaseActivity() {
                 override fun onStopTrackingTouch(sb: SeekBar) {}
             })
         })
-        box.addView(Ui.text(this, "노래를 틀 때마다 이 크기로 시작해요. 할머니가 소리를 줄여놔도 다시 들려요.", 13f, color = Ui.SUB))
 
-        box.addView(Ui.text(this, "글씨 크기", 16f, true).marginTop(this, 6))
+        box.addView(Ui.text(this, "글씨 크기", 15f, light = true).marginTop(this, 6))
         box.addView(Ui.segment(this, listOf("크게" to false, "아주 크게" to true), prefs.hugeText) {
             prefs.hugeText = it as Boolean; rebuildKeepScroll()
         })
 
-        box.addView(Ui.text(this, "잠자기 타이머", 16f, true).marginTop(this, 6))
+        box.addView(Ui.text(this, "잠자기 타이머", 15f, light = true).marginTop(this, 6))
         box.addView(Ui.segment(this, listOf("안 씀" to 0, "30분" to 30, "1시간" to 60, "2시간" to 120), prefs.sleepMinutes) {
             prefs.sleepMinutes = it as Int; rebuildKeepScroll()
         })
-        box.addView(Ui.text(this, "노래를 틀고 정한 시간이 지나면 저절로 꺼져요.", 13f, color = Ui.SUB))
         return box
     }
 
@@ -330,7 +316,6 @@ class SettingsActivity : BaseActivity() {
                 Toast.makeText(this, "바탕화면을 길게 눌러 '위젯'에서 '손녀의 선물'을 추가해 주세요", Toast.LENGTH_LONG).show()
             }
         }.apply { gravity = Gravity.CENTER_VERTICAL or Gravity.START })
-        box.addView(Ui.text(this, "갤럭시에서 화면이 꺼져도 노래가 끊기지 않게 하려면 위 두 개를 꼭 해주세요.", 13f, color = Ui.SUB))
         return box
     }
 
@@ -380,9 +365,9 @@ class SettingsActivity : BaseActivity() {
             },
         )
 
-        val last = if (sp.lastSync == 0L) "없음" else
-            java.text.SimpleDateFormat("M월 d일 a h:mm", java.util.Locale.KOREA).format(java.util.Date(sp.lastSync))
-        box.addView(Ui.text(this, "결과: ${sp.status}\n마지막 받기: $last", 13f, color = Ui.SUB))
+        val last = if (sp.lastSync == 0L) "" else
+            " · " + java.text.SimpleDateFormat("M월 d일 a h:mm", java.util.Locale.KOREA).format(java.util.Date(sp.lastSync))
+        box.addView(Ui.text(this, "${sp.status}$last", 13f, color = Ui.SUB, light = true))
 
         box.addView(
             Ui.button(
@@ -390,7 +375,7 @@ class SettingsActivity : BaseActivity() {
                 fill = if (syncing) Ui.PRESSED else Ui.INK, fg = Color.WHITE, stroke = null, heightDp = 56,
             ) { startSongSync() }.apply { isEnabled = !syncing },
         )
-        val prog = Ui.text(this, syncMessage, 14f, true).apply {
+        val prog = Ui.text(this, syncMessage, 14f, light = true).apply {
             visibility = if (syncing) View.VISIBLE else View.GONE
         }
         syncProgress = prog
@@ -448,10 +433,10 @@ class SettingsActivity : BaseActivity() {
     private fun updateSection(): LinearLayout {
         val box = Ui.section(this, "업데이트")
         val up = UpdatePrefs(this)
-        box.addView(Ui.text(this, "현재 버전 ${BuildConfig.VERSION_NAME} (versionCode ${BuildConfig.VERSION_CODE})", 15f, true))
-        val last = if (up.lastCheck == 0L) "없음" else
-            java.text.SimpleDateFormat("M월 d일 a h:mm", java.util.Locale.KOREA).format(java.util.Date(up.lastCheck))
-        box.addView(Ui.text(this, "상태: ${up.status}\n마지막 확인: $last", 13f, color = Ui.SUB))
+        box.addView(Ui.text(this, "현재 버전 ${BuildConfig.VERSION_NAME}", 15f, light = true))
+        val last = if (up.lastCheck == 0L) "" else
+            " · " + java.text.SimpleDateFormat("M월 d일 a h:mm", java.util.Locale.KOREA).format(java.util.Date(up.lastCheck))
+        box.addView(Ui.text(this, "${up.status}$last", 13f, color = Ui.SUB, light = true))
 
         if (!Updater.isConfigured) {
             box.addView(Ui.text(this, "app/build.gradle.kts의 updateJsonUrl을 내 GitHub 주소로 바꿔야 업데이트할 수 있어요.", 13f, color = Ui.DANGER))
@@ -472,7 +457,6 @@ class SettingsActivity : BaseActivity() {
                 fill = if (updating) Ui.PRESSED else Ui.INK, fg = Color.WHITE, stroke = null, heightDp = 56,
             ) { startUpdate() }.apply { isEnabled = !updating },
         )
-        box.addView(Ui.text(this, "누르면 최신 버전을 받아서 바로 설치해요. 노래가 나오고 있으면 꺼져요. (인터넷 필요)", 13f, color = Ui.SUB))
         return box
     }
 
@@ -520,8 +504,8 @@ class SettingsActivity : BaseActivity() {
             "앱 버전" to (version ?: "?"),
         ).forEach { (k, v) ->
             val row = Ui.horizontal(this)
-            row.addView(Ui.text(this, k, 15f, color = Ui.SUB), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(Ui.text(this, v, 15f, true))
+            row.addView(Ui.text(this, k, 14f, color = Ui.SUB, light = true), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            row.addView(Ui.text(this, v, 14f))
             box.addView(row)
         }
         return box

@@ -50,6 +50,15 @@ object Ui {
     /** 페이퍼로지 글꼴: 보통 = 7 Bold, 굵게 = 8 ExtraBold (할머니가 읽기 쉽게 둘 다 두꺼워) */
     private var regularFont: Typeface? = null
     private var boldFont: Typeface? = null
+    private var lightFont: Typeface? = null
+
+    /** 페이퍼로지 3 Light: 가족 설정(수유니만 보는 화면)의 소제목·설명용 */
+    fun lightFont(ctx: Context): Typeface {
+        lightFont?.let { return it }
+        val tf = ResourcesCompat.getFont(ctx, R.font.paperlogy_light) ?: Typeface.DEFAULT
+        lightFont = tf
+        return tf
+    }
 
     fun font(ctx: Context, bold: Boolean): Typeface {
         val cached = if (bold) boldFont else regularFont
@@ -60,12 +69,12 @@ object Ui {
         return tf
     }
 
-    fun text(ctx: Context, s: CharSequence, sp: Float, bold: Boolean = false, color: Int = INK): TextView =
+    fun text(ctx: Context, s: CharSequence, sp: Float, bold: Boolean = false, color: Int = INK, light: Boolean = false): TextView =
         TextView(ctx).apply {
             text = s
             setTextSize(TypedValue.COMPLEX_UNIT_SP, sp)
             setTextColor(color)
-            typeface = font(ctx, bold)
+            typeface = if (light) lightFont(ctx) else font(ctx, bold)
             includeFontPadding = false
             setLineSpacing(0f, 1.1f)
         }
@@ -108,13 +117,13 @@ object Ui {
 
     /** 흰 카드 섹션 (제목 포함) */
     fun section(ctx: Context, title: String, hint: String? = null): LinearLayout {
-        val box = vertical(ctx, 12).apply {
-            background = shape(ctx, Color.WHITE, 18)
-            setPadding(ctx.dp(16), ctx.dp(18), ctx.dp(16), ctx.dp(18))
+        val box = vertical(ctx, 14).apply {
+            background = shape(ctx, Color.WHITE, 20)
+            setPadding(ctx.dp(20), ctx.dp(20), ctx.dp(20), ctx.dp(20))
         }
-        val head = horizontal(ctx).apply { gravity = Gravity.BOTTOM }
-        head.addView(text(ctx, title, 19f, true), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        if (hint != null) head.addView(text(ctx, hint, 13f, color = SUB))
+        val head = horizontal(ctx).apply { gravity = Gravity.CENTER_VERTICAL }
+        head.addView(text(ctx, title, 17f, true), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        if (hint != null) head.addView(text(ctx, hint, 12f, color = SUB, light = true))
         box.addView(head)
         return box
     }
@@ -134,6 +143,52 @@ object Ui {
             row.addView(b, LinearLayout.LayoutParams(0, ctx.dp(44), 1f))
         }
         return row
+    }
+
+    /**
+     * 알약 모양 스위치 (켜짐 = 초록 알약 + 흰 동그라미 오른쪽, 꺼짐 = 회색 알약 + 왼쪽).
+     * 화면 읽기 기능에는 일반 스위치로 읽혀.
+     */
+    fun pillSwitch(ctx: Context, initial: Boolean, label: String, onChange: (Boolean) -> Unit): View {
+        val w = ctx.dp(50); val h = ctx.dp(30); val pad = ctx.dp(3); val knob = h - pad * 2
+        var checked = initial
+        val track = android.widget.FrameLayout(ctx)
+        val thumb = View(ctx).apply {
+            background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.WHITE) }
+            elevation = ctx.dp(1).toFloat()
+        }
+        track.addView(thumb, android.widget.FrameLayout.LayoutParams(knob, knob).apply {
+            gravity = Gravity.CENTER_VERTICAL; leftMargin = pad
+        })
+        val travel = (w - pad * 2 - knob).toFloat()
+        fun paint(animate: Boolean) {
+            track.background = shape(ctx, if (checked) ON else Color.parseColor("#D1D5DB"), h / 2f / ctx.resources.displayMetrics.density)
+            val x = if (checked) travel else 0f
+            if (animate) thumb.animate().translationX(x).setDuration(160).start() else thumb.translationX = x
+        }
+        paint(false)
+        track.contentDescription = label
+        track.isClickable = true
+        track.isFocusable = true
+        track.setOnClickListener {
+            checked = !checked
+            paint(true)
+            track.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_CLICKED)
+            onChange(checked)
+        }
+        track.accessibilityDelegate = object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: android.view.accessibility.AccessibilityNodeInfo) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.className = "android.widget.Switch"
+                info.isCheckable = true
+                info.isChecked = checked
+            }
+        }
+        // 누르기 쉽게 터치 영역은 넉넉히 (48dp), 보이는 알약은 50x30
+        return android.widget.FrameLayout(ctx).apply {
+            setPadding(0, ctx.dp(9), 0, ctx.dp(9))
+            addView(track, android.widget.FrameLayout.LayoutParams(w, h))
+        }
     }
 
     fun matchWrap() = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
