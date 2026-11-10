@@ -18,6 +18,7 @@ import android.app.AlertDialog
 import android.net.ConnectivityManager
 import android.view.View
 import android.view.WindowManager
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -28,8 +29,12 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.suyuni.grandmamusic.BuildConfig
 import com.suyuni.grandmamusic.R
+import com.suyuni.grandmamusic.data.Playlist
 import com.suyuni.grandmamusic.data.Prefs
 import com.suyuni.grandmamusic.data.Repository
 import com.suyuni.grandmamusic.sync.SongSync
@@ -103,70 +108,112 @@ class SettingsActivity : BaseActivity() {
     // ── 재생목록 ─────────────────────────────────────────
     private fun playlistSection(): LinearLayout {
         val box = Ui.section(this, "재생목록", "최대 ${Repository.WIDGET_MAX}개까지 표시")
-        val lists = Repository.load(this)
-        lists.forEachIndexed { i, p ->
-            val row = Ui.horizontal(this, 8).apply { setPadding(0, dp(8), 0, dp(8)) }
-            row.addView(TextView(this).apply { background = Ui.shape(context, p.color, 6) }, LinearLayout.LayoutParams(dp(22), dp(22)))
-            val t = Ui.vertical(this)
-            t.addView(Ui.text(this, p.name, 18f, true).apply { maxLines = 1 })
-            t.addView(Ui.text(this, "노래 ${p.songs.size}곡", 13f, color = Ui.SUB))
-            row.addView(t, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        val lists = Repository.load(this).toMutableList()
 
-            fun iconBtn(icon: Int, desc: String, enabled: Boolean, fill: Int, tint: Int, stroke: Int, onClick: () -> Unit) =
-                ImageButton(this).apply {
-                    setImageResource(icon)
-                    imageTintList = Ui.tint(tint)
-                    background = Ui.pressable(context, fill, 10, stroke, 1.5)
-                    contentDescription = desc
-                    isEnabled = enabled
-                    alpha = if (enabled) 1f else 0.3f
-                    setPadding(dp(8), dp(8), dp(8), dp(8))
-                    scaleType = ImageView.ScaleType.FIT_CENTER
-                    setOnClickListener { onClick() }
-                    layoutParams = LinearLayout.LayoutParams(dp(44), dp(44))
-                }
-            val lightLine = Color.parseColor("#D4D4D4")
-            row.addView(iconBtn(R.drawable.ic_arrow_up, "위로", i > 0, Color.WHITE, Ui.INK, lightLine) {
-                Repository.move(this, p.id, -1); changed()
-            })
-            row.addView(iconBtn(R.drawable.ic_arrow_down, "아래로", i < lists.lastIndex, Color.WHITE, Ui.INK, lightLine) {
-                Repository.move(this, p.id, 1); changed()
-            })
-
-            val onW = p.showOnWidget
-            row.addView(
-                iconBtn(
-                    if (onW) R.drawable.ic_eye else R.drawable.ic_eye_off,
-                    if (onW) "할머니 화면에 보임" else "할머니 화면에서 숨김",
-                    true,
-                    fill = if (onW) Ui.INK else Color.WHITE,
-                    tint = if (onW) Color.WHITE else Color.parseColor("#9CA3AF"),
-                    stroke = if (onW) Ui.INK else lightLine,
-                ) {
-                    val count = Repository.load(this).count { it.showOnWidget }
-                    if (!onW && count >= Repository.WIDGET_MAX) {
-                        Toast.makeText(this, "할머니 화면에는 ${Repository.WIDGET_MAX}개까지만 보여요", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Repository.upsert(this, p.copy(showOnWidget = !onW)); changed()
-                    }
-                },
-            )
-            row.addView(Ui.text(this, "편집", 15f, true, Color.parseColor("#1D4ED8")).apply {
-                gravity = Gravity.CENTER
-                setPadding(dp(6), dp(10), dp(2), dp(10))
-                setOnClickListener {
-                    startActivity(Intent(this@SettingsActivity, PlaylistEditActivity::class.java).putExtra(PlaylistEditActivity.EXTRA_ID, p.id))
-                }
-            })
-            if (i > 0) row.background = topLine()
-            box.addView(row)
+        // 줄을 꾹 누르고 위아래로 끌면 순서가 바뀌어 (위젯 버튼 순서도 같이)
+        val rv = RecyclerView(this).apply {
+            layoutManager = LinearLayoutManager(context)
+            isNestedScrollingEnabled = false
+            overScrollMode = View.OVER_SCROLL_NEVER
         }
+        val adapter = PlaylistRowAdapter(lists)
+        rv.adapter = adapter
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+            override fun isLongPressDragEnabled() = true
+            override fun onMove(r: RecyclerView, from: RecyclerView.ViewHolder, to: RecyclerView.ViewHolder): Boolean {
+                val a = from.bindingAdapterPosition
+                val b = to.bindingAdapterPosition
+                java.util.Collections.swap(lists, a, b)
+                adapter.notifyItemMoved(a, b)
+                return true
+            }
+            override fun onSwiped(vh: RecyclerView.ViewHolder, direction: Int) {}
+            override fun onSelectedChanged(vh: RecyclerView.ViewHolder?, actionState: Int) {
+                super.onSelectedChanged(vh, actionState)
+                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG && vh != null) {
+                    rv.parent.requestDisallowInterceptTouchEvent(true) // 끄는 동안 화면 스크롤이 끼어들지 않게
+                    vh.itemView.background = Ui.shape(this@SettingsActivity, Color.parseColor("#FEF3C7"), 10)
+                    vh.itemView.elevation = dp(6).toFloat()
+                    vh.itemView.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+                }
+            }
+            override fun clearView(r: RecyclerView, vh: RecyclerView.ViewHolder) {
+                super.clearView(r, vh)
+                vh.itemView.elevation = 0f
+                // 바뀐 순서 저장 (드래그하는 동안 다른 곳에서 바뀐 내용은 그대로 두고 순서만 맞춰)
+                val order = lists.map { it.id }
+                val latest = Repository.load(this@SettingsActivity)
+                Repository.save(this@SettingsActivity, latest.sortedBy { p -> order.indexOf(p.id).let { if (it < 0) Int.MAX_VALUE else it } })
+                WidgetUpdater.updateAll(this@SettingsActivity)
+                adapter.notifyDataSetChanged() // 구분선 다시 그리기
+            }
+        }).attachToRecyclerView(rv)
+        box.addView(rv, Ui.matchWrap())
+
         box.addView(
             Ui.button(this, "+ 새 재생목록 만들기", 16f, stroke = Color.parseColor("#9CA3AF")) {
                 startActivity(Intent(this, PlaylistEditActivity::class.java))
             },
         )
         return box
+    }
+
+    private inner class PlaylistRowAdapter(val lists: MutableList<Playlist>) :
+        RecyclerView.Adapter<PlaylistRowAdapter.VH>() {
+        inner class VH(val holder: FrameLayout) : RecyclerView.ViewHolder(holder)
+
+        override fun getItemCount() = lists.size
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = VH(
+            FrameLayout(parent.context).apply {
+                layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            },
+        )
+
+        override fun onBindViewHolder(vh: VH, position: Int) {
+            vh.holder.removeAllViews()
+            vh.holder.addView(playlistRow(lists[position], position))
+            vh.holder.background = if (position > 0) topLine() else null
+        }
+    }
+
+    private fun playlistRow(p: Playlist, position: Int): LinearLayout {
+        val row = Ui.horizontal(this, 8).apply { setPadding(0, dp(8), 0, dp(8)) }
+        row.addView(TextView(this).apply { background = Ui.shape(context, p.color, 6) }, LinearLayout.LayoutParams(dp(22), dp(22)))
+        val t = Ui.vertical(this)
+        t.addView(Ui.text(this, p.name, 18f, true).apply { maxLines = 1 })
+        t.addView(Ui.text(this, "노래 ${p.songs.size}곡", 13f, color = Ui.SUB))
+        row.addView(t, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+
+        val lightLine = Color.parseColor("#D4D4D4")
+        val onW = p.showOnWidget
+        row.addView(
+            ImageButton(this).apply {
+                setImageResource(if (onW) R.drawable.ic_eye else R.drawable.ic_eye_off)
+                imageTintList = Ui.tint(if (onW) Color.WHITE else Color.parseColor("#9CA3AF"))
+                background = Ui.pressable(context, if (onW) Ui.INK else Color.WHITE, 10, if (onW) Ui.INK else lightLine, 1.5)
+                contentDescription = if (onW) "할머니 화면에 보임" else "할머니 화면에서 숨김"
+                setPadding(dp(8), dp(8), dp(8), dp(8))
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                layoutParams = LinearLayout.LayoutParams(dp(44), dp(44))
+                setOnClickListener {
+                    val count = Repository.load(this@SettingsActivity).count { it.showOnWidget }
+                    if (!onW && count >= Repository.WIDGET_MAX) {
+                        Toast.makeText(this@SettingsActivity, "할머니 화면에는 ${Repository.WIDGET_MAX}개까지만 보여요", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Repository.upsert(this@SettingsActivity, p.copy(showOnWidget = !onW)); changed()
+                    }
+                }
+            },
+        )
+        row.addView(Ui.text(this, "편집", 15f, true, Color.parseColor("#1D4ED8")).apply {
+            gravity = Gravity.CENTER
+            setPadding(dp(6), dp(10), dp(2), dp(10))
+            setOnClickListener {
+                startActivity(Intent(this@SettingsActivity, PlaylistEditActivity::class.java).putExtra(PlaylistEditActivity.EXTRA_ID, p.id))
+            }
+        })
+        return row
     }
 
     private fun topLine() = android.graphics.drawable.LayerDrawable(
@@ -298,7 +345,7 @@ class SettingsActivity : BaseActivity() {
         val sp = SyncPrefs(this)
         if (p.repo != null) sp.repo = p.repo
         sp.token = p.token
-        Toast.makeText(this, "토큰을 저장했어요 (${sp.repo})", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "토큰을 저장했어요", Toast.LENGTH_LONG).show()
         rebuildKeepScroll()
     }
 
@@ -310,11 +357,9 @@ class SettingsActivity : BaseActivity() {
     private fun songSyncSection(): LinearLayout {
         val box = Ui.section(this, "새 노래 받기")
         val sp = SyncPrefs(this)
-        box.addView(Ui.text(this, "비공개 GitHub 저장소의 폴더 = 재생목록, 파일 이름 = 노래 제목이에요. 저장소에서 지운 노래는 폰에서도 지워져요. (폰에서 직접 넣은 노래는 그대로)", 13f, color = Ui.SUB))
 
         // 저장소 이름과 토큰은 PC의 "토큰QR만들기.html"로 만든 QR을 찍어서 넣어
         val saved = sp.token
-        box.addView(Ui.text(this, "저장소: ${sp.repo}", 15f, true))
         box.addView(
             Ui.text(
                 this,

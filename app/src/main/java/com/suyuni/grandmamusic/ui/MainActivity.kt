@@ -177,11 +177,10 @@ class MainActivity : BaseActivity() {
 
     private fun card(p: Playlist, selected: Boolean, s: Float): LinearLayout {
         val c = Ui.horizontal(this, 12).apply {
-            background = Ui.pressable(context, p.color, 26, if (selected) Ui.INK else p.color, if (selected) 5 else 0)
+            // 상자는 눌러도 아무 일 없고, 오른쪽 "노래 틀기"만 눌러야 그 노래로 바뀌어
+            background = Ui.shape(context, p.color, 26, if (selected) Ui.INK else p.color, if (selected) 5 else 0)
             setPadding(dp(26), dp(14), dp(18), dp(14))
             minimumHeight = dp(124)
-            isClickable = true
-            setOnClickListener { playPlaylist(p) }
         }
         val texts = Ui.vertical(this, 2)
         texts.addView(Ui.text(this, p.name, 34f * s, true, Color.WHITE).apply { maxLines = 1 })
@@ -189,8 +188,13 @@ class MainActivity : BaseActivity() {
         c.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         val chip = Ui.text(this, "노래\n틀기", 22f * s, true, p.color).apply {
             gravity = Gravity.CENTER
-            background = Ui.shape(context, Color.WHITE, 16)
+            background = Ui.pressable(context, Color.WHITE, 16)
             setPadding(dp(14), dp(10), dp(14), dp(10))
+            minHeight = dp(64)
+            minWidth = dp(64)
+            contentDescription = "${p.name} 노래 틀기"
+            isClickable = true
+            setOnClickListener { playPlaylist(p) }
         }
         c.addView(chip)
         return c
