@@ -275,7 +275,7 @@ class PlaylistEditActivity : BaseActivity() {
         }
         val showOnWidget = original?.showOnWidget
             ?: (Repository.load(this).count { it.showOnWidget } < Repository.WIDGET_MAX)
-        Repository.upsert(this, Playlist(playlistId, n, colorIndex, showOnWidget, songs.toList()))
+        Repository.upsert(this, Playlist(playlistId, n, colorIndex, showOnWidget, songs.toList(), original?.remoteFolder))
         Repository.cleanupOrphans(this)
         WidgetUpdater.updateAll(this)
         Toast.makeText(this, "저장했어요", Toast.LENGTH_SHORT).show()

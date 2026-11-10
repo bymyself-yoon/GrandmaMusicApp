@@ -14,6 +14,12 @@ import android.provider.Settings
 import android.text.format.Formatter
 import android.view.Gravity
 import android.view.ViewGroup
+import android.app.AlertDialog
+import android.net.ConnectivityManager
+import android.text.InputType
+import android.view.View
+import android.view.WindowManager
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -28,6 +34,8 @@ import com.suyuni.grandmamusic.BuildConfig
 import com.suyuni.grandmamusic.R
 import com.suyuni.grandmamusic.data.Prefs
 import com.suyuni.grandmamusic.data.Repository
+import com.suyuni.grandmamusic.sync.SongSync
+import com.suyuni.grandmamusic.sync.SyncPrefs
 import com.suyuni.grandmamusic.playback.PlaybackService
 import com.suyuni.grandmamusic.ui.Ui.dp
 import com.suyuni.grandmamusic.ui.Ui.marginTop
@@ -86,6 +94,7 @@ class SettingsActivity : BaseActivity() {
         content.addView(playbackSection())
         content.addView(soundSection())
         content.addView(setupSection())
+        content.addView(songSyncSection())
         content.addView(updateSection())
         content.addView(infoSection())
     }
@@ -275,6 +284,115 @@ class SettingsActivity : BaseActivity() {
         }.apply { gravity = Gravity.CENTER_VERTICAL or Gravity.START })
         box.addView(Ui.text(this, "갤럭시에서 화면이 꺼져도 노래가 끊기지 않게 하려면 위 두 개를 꼭 해주세요.", 13f, color = Ui.SUB))
         return box
+    }
+
+    // ── 새 노래 받기 ─────────────────────────────────────────
+    private var syncing = false
+    private var syncProgress: TextView? = null
+    private var syncMessage = ""
+    private val syncIo = java.util.concurrent.Executors.newSingleThreadExecutor()
+
+    private fun songSyncSection(): LinearLayout {
+        val box = Ui.section(this, "새 노래 받기")
+        val sp = SyncPrefs(this)
+        box.addView(Ui.text(this, "비공개 GitHub 저장소의 폴더 = 재생목록, 파일 이름 = 노래 제목이에요. 저장소에서 지운 노래는 폰에서도 지워져요. (폰에서 직접 넣은 노래는 그대로)", 13f, color = Ui.SUB))
+
+        fun field(label: String, value: String, hint: String, password: Boolean): EditText {
+            box.addView(Ui.text(this, label, 15f, true))
+            val e = EditText(this).apply {
+                setText(value)
+                this.hint = hint
+                setSingleLine()
+                textSize = 15f
+                setTextColor(Ui.INK)
+                background = Ui.shape(context, Color.WHITE, 12, Color.parseColor("#9CA3AF"), 1.5)
+                setPadding(dp(12), 0, dp(12), 0)
+                contentDescription = label
+                inputType = if (password) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                else InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            }
+            box.addView(e, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)))
+            return e
+        }
+        val repoInput = field("저장소 (아이디/저장소이름)", sp.repo, SyncPrefs.DEFAULT_REPO, false)
+        val saved = sp.token
+        val tokenInput = field(
+            "토큰", "",
+            if (saved.isEmpty()) "github_pat_로 시작하는 토큰 붙여넣기" else "저장됨 (…${saved.takeLast(4)}) · 바꿀 때만 입력",
+            true,
+        )
+        box.addView(
+            Ui.button(this, "저장", 15f) {
+                sp.repo = repoInput.text.toString()
+                val t = tokenInput.text.toString().trim()
+                if (t.isNotEmpty()) sp.token = t
+                Toast.makeText(this, "저장했어요", Toast.LENGTH_SHORT).show()
+                rebuildKeepScroll()
+            },
+        )
+
+        val last = if (sp.lastSync == 0L) "없음" else
+            java.text.SimpleDateFormat("M월 d일 a h:mm", java.util.Locale.KOREA).format(java.util.Date(sp.lastSync))
+        box.addView(Ui.text(this, "결과: ${sp.status}\n마지막 받기: $last", 13f, color = Ui.SUB))
+
+        box.addView(
+            Ui.button(
+                this, if (syncing) "받는 중…" else "새 노래 받기", 17f,
+                fill = if (syncing) Ui.PRESSED else Ui.INK, fg = Color.WHITE, stroke = null, heightDp = 56,
+            ) { startSongSync() }.apply { isEnabled = !syncing },
+        )
+        val prog = Ui.text(this, syncMessage, 14f, true).apply {
+            visibility = if (syncing) View.VISIBLE else View.GONE
+        }
+        syncProgress = prog
+        box.addView(prog)
+        return box
+    }
+
+    private fun startSongSync() {
+        if (syncing || SongSync.isRunning) return
+        val sp = SyncPrefs(this)
+        if (sp.token.isEmpty()) {
+            Toast.makeText(this, "토큰을 먼저 넣고 저장해주세요", Toast.LENGTH_LONG).show(); return
+        }
+        val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (cm.activeNetwork == null) {
+            Toast.makeText(this, "인터넷이 연결돼 있지 않아요", Toast.LENGTH_LONG).show(); return
+        }
+        if (cm.isActiveNetworkMetered) {
+            AlertDialog.Builder(this)
+                .setMessage("지금 와이파이가 아니라 데이터로 연결돼 있어요.\n노래를 받으면 데이터 요금이 나올 수 있어요. 계속할까요?")
+                .setPositiveButton("받기") { _, _ -> runSongSync() }
+                .setNegativeButton("취소", null)
+                .show()
+        } else {
+            runSongSync()
+        }
+    }
+
+    private fun runSongSync() {
+        syncing = true
+        syncMessage = "준비 중…"
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) // 받는 동안 화면 안 꺼지게
+        rebuildKeepScroll()
+        syncIo.execute {
+            val r = SongSync.run(applicationContext) { msg ->
+                runOnUiThread {
+                    syncMessage = msg
+                    syncProgress?.text = msg
+                }
+            }
+            runOnUiThread {
+                syncing = false
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                val msg = when (r) {
+                    is SongSync.Result.Done -> SyncPrefs(this).status
+                    is SongSync.Result.Failed -> r.message
+                }
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+                if (!isFinishing) rebuildKeepScroll()
+            }
+        }
     }
 
     // ── 업데이트 ─────────────────────────────────────────
