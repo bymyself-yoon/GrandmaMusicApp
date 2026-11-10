@@ -52,5 +52,10 @@ class Prefs(ctx: Context) {
     fun savedIndex(playlistId: String) = sp.getInt("pos_idx_$playlistId", 0)
     fun savedPosition(playlistId: String) = sp.getLong("pos_ms_$playlistId", 0L)
 
-    val textScale: Float get() = if (hugeText) 1.18f else 1f
+    /** 앱 첫 화면 글씨 크기 (80~150%). 예전 "아주 크게" 설정은 118%로 이어받아 */
+    var textScalePercent: Int
+        get() = sp.getInt("textScalePct", if (hugeText) 118 else 100)
+        set(v) = sp.edit().putInt("textScalePct", v.coerceIn(80, 150)).apply()
+
+    val textScale: Float get() = textScalePercent / 100f
 }

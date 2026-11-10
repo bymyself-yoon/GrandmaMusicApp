@@ -130,7 +130,7 @@ class SettingsActivity : BaseActivity() {
                 super.onSelectedChanged(vh, actionState)
                 if (actionState == ItemTouchHelper.ACTION_STATE_DRAG && vh != null) {
                     rv.parent.requestDisallowInterceptTouchEvent(true) // 끄는 동안 화면 스크롤이 끼어들지 않게
-                    vh.itemView.background = Ui.shape(this@SettingsActivity, Color.parseColor("#F1F1F1"), 10)
+                    vh.itemView.background = android.graphics.drawable.ColorDrawable(Color.parseColor("#F1F1F1"))
                     vh.itemView.elevation = dp(6).toFloat()
                     vh.itemView.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
                 }
@@ -177,7 +177,14 @@ class SettingsActivity : BaseActivity() {
 
     private fun playlistRow(p: Playlist, position: Int): LinearLayout {
         val row = Ui.horizontal(this, 8).apply { setPadding(0, dp(8), 0, dp(8)) }
-        row.addView(TextView(this).apply { background = Ui.shape(context, p.color, 6) }, LinearLayout.LayoutParams(dp(22), dp(22)))
+        row.addView(
+            View(this).apply {
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(p.color)
+                }
+            },
+            LinearLayout.LayoutParams(dp(16), dp(16)).apply { marginStart = dp(2); marginEnd = dp(4) },
+        )
         val t = Ui.vertical(this)
         t.addView(Ui.text(this, p.name, 17f, true).apply { maxLines = 1 })
         t.addView(Ui.text(this, "노래 ${p.songs.size}곡", 13f, color = Ui.SUB, light = true))
@@ -230,7 +237,7 @@ class SettingsActivity : BaseActivity() {
         box.addView(Ui.segment(this, listOf("순서대로" to false, "섞어서" to true), prefs.shuffle) {
             prefs.shuffle = it as Boolean; applyLive(); rebuildKeepScroll()
         })
-        box.addView(switchRow("다 끝나면 처음부터", prefs.repeat) { prefs.repeat = it; applyLive() })
+        box.addView(switchRow("반복 재생", prefs.repeat) { prefs.repeat = it; applyLive() })
         box.addView(switchRow("껐다 켜면 이어서 재생", prefs.resume) { prefs.resume = it })
         return box
     }
@@ -274,9 +281,27 @@ class SettingsActivity : BaseActivity() {
             })
         })
 
-        box.addView(Ui.text(this, "글씨 크기", 15f, light = true).marginTop(this, 6))
-        box.addView(Ui.segment(this, listOf("크게" to false, "아주 크게" to true), prefs.hugeText) {
-            prefs.hugeText = it as Boolean; rebuildKeepScroll()
+        // 앱 첫 화면 글씨 크기: 80% ~ 150% (5% 단위)
+        val fontHead = Ui.horizontal(this)
+        fontHead.addView(Ui.text(this, "글씨 크기", 15f, light = true), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        val fontLabel = Ui.text(this, "${prefs.textScalePercent}%", 15f, true)
+        fontHead.addView(fontLabel)
+        box.addView(fontHead.marginTop(this, 6))
+        box.addView(SeekBar(this).apply {
+            max = 14
+            progress = (prefs.textScalePercent - 80) / 5
+            contentDescription = "글씨 크기"
+            progressTintList = Ui.tint(Ui.INK)
+            thumbTintList = Ui.tint(Ui.INK)
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
+                    val v = 80 + p * 5
+                    prefs.textScalePercent = v
+                    fontLabel.text = "$v%"
+                }
+                override fun onStartTrackingTouch(sb: SeekBar) {}
+                override fun onStopTrackingTouch(sb: SeekBar) {}
+            })
         })
 
         box.addView(Ui.text(this, "잠자기 타이머", 15f, light = true).marginTop(this, 6))
@@ -300,13 +325,26 @@ class SettingsActivity : BaseActivity() {
 
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         val ignoring = pm.isIgnoringBatteryOptimizations(packageName)
-        box.addView(Ui.button(this, if (ignoring) "배터리 최적화 예외: 설정됨 ✓" else "배터리 최적화 예외로 설정하기", 15f) {
+        box.addView(Ui.button(this, "배터리 최적화 예외로 설정하기", 15f) {
             try {
                 startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName")))
             } catch (e: Exception) {
                 startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
             }
-        }.apply { gravity = Gravity.CENTER_VERTICAL or Gravity.START })
+        }.apply {
+            gravity = Gravity.CENTER_VERTICAL or Gravity.START
+            if (ignoring) {
+                // "설정됨 ✓"만 초록색으로
+                val label = "배터리 최적화 예외: 설정됨 ✓"
+                text = android.text.SpannableString(label).apply {
+                    setSpan(
+                        android.text.style.ForegroundColorSpan(Ui.ON),
+                        label.indexOf("설정됨"), label.length,
+                        android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
+                    )
+                }
+            }
+        })
 
         box.addView(Ui.button(this, "위젯을 바탕화면에 추가하기", 15f, fill = Ui.INK, fg = Color.WHITE) {
             val mgr = AppWidgetManager.getInstance(this)
