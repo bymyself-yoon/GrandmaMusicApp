@@ -72,6 +72,18 @@
         </receiver>
 
         <receiver
+            android:name=".widget.HalfMusicWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_half_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_half" />
+        </receiver>
+
+        <receiver
             android:name=".update.InstallResultReceiver"
             android:exported="false" />
 

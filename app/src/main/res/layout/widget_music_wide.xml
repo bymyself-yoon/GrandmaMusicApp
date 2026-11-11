@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 가로로 넓고 납작한 위젯용 (화면 반만 차지할 때). WidgetUpdater가 위젯 크기를 보고 고름.
+     재생목록은 2칸씩 두 줄로 배치해.
+     ⚠️ 여백·비율을 바꾸면 MusicWidgetProvider.kt의 계산도 같이 바꿔줘. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_widget"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.9"
+        android:scaleType="fitCenter" />
+
+    <ImageView
+        android:id="@+id/song_title"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/controls"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="6dp"
+        android:layout_weight="1.6"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/btn_play"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/bg_play"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/btn_play_icon"
+                android:layout_width="28dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="2dp"
+                android:importantForAccessibility="no"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_play_badge" />
+
+            <ImageView
+                android:id="@+id/play_label"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:scaleType="fitCenter" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="8dp"
+            android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:id="@+id/btn_stop"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/bg_stop"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/btn_stop_icon"
+                android:layout_width="28dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="2dp"
+                android:importantForAccessibility="no"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_stop_badge" />
+
+            <ImageView
+                android:id="@+id/stop_label"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:scaleType="fitCenter" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lists"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="2.6"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="4dp"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/pl_line_0"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:id="@+id/pl_row_0"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/wg_pl_0"
+                android:paddingStart="10dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="2dp">
+
+                <ImageView
+                    android:id="@+id/pl_name_0"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/pl_row_1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/wg_pl_1"
+                android:paddingStart="10dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="2dp">
+
+                <ImageView
+                    android:id="@+id/pl_name_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter" />
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/pl_line_1"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="6dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:id="@+id/pl_row_2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/wg_pl_2"
+                android:paddingStart="10dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="2dp">
+
+                <ImageView
+                    android:id="@+id/pl_name_2"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/pl_row_3"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/wg_pl_3"
+                android:paddingStart="10dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="2dp">
+
+                <ImageView
+                    android:id="@+id/pl_name_3"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter" />
+            </FrameLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

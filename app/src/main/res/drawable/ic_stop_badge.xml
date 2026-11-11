@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 흰 동그라미 + 아이콘을 한 그림으로: 위젯이 작아지면 같이 줄어들어 (안 잘림) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="56dp" android:height="56dp">
+        <shape android:shape="oval"><solid android:color="#FFFFFF" /></shape>
+    </item>
+    <item android:width="40dp" android:height="40dp" android:gravity="center" android:drawable="@drawable/ic_stop_x" />
+</layer-list>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 화면 반만 차지하는 위젯 (가로 4칸 x 세로 3칸으로 시작, 줄이고 늘릴 수 있어) -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_half_description"
+    android:initialLayout="@layout/widget_music_wide"
+    android:minWidth="250dp"
+    android:minHeight="180dp"
+    android:minResizeWidth="140dp"
+    android:minResizeHeight="110dp"
+    android:previewLayout="@layout/widget_music_wide"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="4"
+    android:targetCellHeight="3"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

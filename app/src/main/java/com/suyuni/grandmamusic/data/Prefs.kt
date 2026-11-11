@@ -52,6 +52,16 @@ class Prefs(ctx: Context) {
     fun savedIndex(playlistId: String) = sp.getInt("pos_idx_$playlistId", 0)
     fun savedPosition(playlistId: String) = sp.getLong("pos_ms_$playlistId", 0L)
 
+    /** 위젯 잠금 ("노래 듣기"를 눌러야 위젯이 열림). 기본 켜짐 */
+    var widgetLock: Boolean
+        get() = sp.getBoolean("widgetLock", true)
+        set(v) = sp.edit().putBoolean("widgetLock", v).apply()
+
+    /** 위젯 잠금을 마지막으로 연 시각 (이때부터 1분 동안 열려 있음) */
+    var widgetUnlockedAt: Long
+        get() = sp.getLong("widgetUnlockedAt", 0L)
+        set(v) = sp.edit().putLong("widgetUnlockedAt", v).apply()
+
     /** 앱 첫 화면 글씨 크기 (80~150%). 예전 "아주 크게" 설정은 118%로 이어받아 */
     var textScalePercent: Int
         get() = sp.getInt("textScalePct", if (hugeText) 118 else 100)

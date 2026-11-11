@@ -239,6 +239,10 @@ class SettingsActivity : BaseActivity() {
         })
         box.addView(switchRow("반복 재생", prefs.repeat) { prefs.repeat = it; applyLive() })
         box.addView(switchRow("껐다 켜면 이어서 재생", prefs.resume) { prefs.resume = it })
+        box.addView(switchRow("위젯 잠금", prefs.widgetLock) {
+            prefs.widgetLock = it
+            WidgetUpdater.updateAll(this)
+        })
         return box
     }
 
@@ -346,14 +350,26 @@ class SettingsActivity : BaseActivity() {
             }
         })
 
-        box.addView(Ui.button(this, "위젯을 바탕화면에 추가하기", 15f, fill = Ui.INK, fg = Color.WHITE) {
+        fun pin(cls: Class<*>) {
             val mgr = AppWidgetManager.getInstance(this)
             if (mgr.isRequestPinAppWidgetSupported) {
-                mgr.requestPinAppWidget(ComponentName(this, MusicWidgetProvider::class.java), null, null)
+                mgr.requestPinAppWidget(ComponentName(this, cls), null, null)
             } else {
                 Toast.makeText(this, "바탕화면을 길게 눌러 '위젯'에서 '손녀의 선물'을 추가해 주세요", Toast.LENGTH_LONG).show()
             }
-        }.apply { gravity = Gravity.CENTER_VERTICAL or Gravity.START })
+        }
+        val pins = Ui.horizontal(this, 8)
+        pins.addView(
+            Ui.button(this, "큰 위젯 추가", 15f, fill = Ui.INK, fg = Color.WHITE) { pin(MusicWidgetProvider::class.java) },
+            LinearLayout.LayoutParams(0, dp(48), 1f),
+        )
+        pins.addView(
+            Ui.button(this, "반 화면 위젯 추가", 15f, fill = Ui.INK, fg = Color.WHITE) {
+                pin(com.suyuni.grandmamusic.widget.HalfMusicWidgetProvider::class.java)
+            },
+            LinearLayout.LayoutParams(0, dp(48), 1f),
+        )
+        box.addView(pins)
         return box
     }
 

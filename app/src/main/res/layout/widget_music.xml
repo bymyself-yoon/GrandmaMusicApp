@@ -1,35 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 위젯 글씨는 홈 화면 앱이 그려서 앱 글꼴(페이퍼로지)이 안 먹어.
-     그래서 글씨를 앱에서 그림(비트맵)으로 그려서 ImageView에 넣어. (WidgetText.kt) -->
+<!-- 보통 크기 위젯.
+     위젯 글씨는 페이퍼로지로 "그림"을 그려서 넣어 (WidgetText.kt).
+     모든 칸이 비율(weight)로 나뉘고, 글씨 그림은 칸 크기에 딱 맞게 그려서
+     위젯을 줄여도 글씨가 잘리지 않고 같이 작아져.
+     ⚠️ 여백·비율을 바꾸면 MusicWidgetProvider.kt의 Geometry도 같이 바꿔줘. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_widget"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="12dp">
 
     <ImageView
         android:id="@+id/title"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:scaleType="fitStart" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scaleType="fitCenter" />
 
     <ImageView
         android:id="@+id/song_title"
         android:layout_width="match_parent"
-        android:layout_height="32dp"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:scaleType="fitStart" />
+        android:layout_height="0dp"
+        android:layout_weight="0.6"
+        android:scaleType="fitCenter" />
 
     <LinearLayout
+        android:id="@+id/controls"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="10dp"
-        android:layout_weight="3"
+        android:layout_marginTop="8dp"
+        android:layout_weight="2.6"
         android:baselineAligned="false"
         android:orientation="horizontal">
 
@@ -40,31 +42,29 @@
             android:layout_weight="1"
             android:background="@drawable/bg_play"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="6dp">
 
-            <FrameLayout
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:background="@drawable/bg_icon_circle">
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_play_circle" />
-            </FrameLayout>
+            <ImageView
+                android:id="@+id/btn_play_icon"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:importantForAccessibility="no"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_play_badge" />
 
             <ImageView
                 android:id="@+id/play_label"
                 android:layout_width="match_parent"
-                android:layout_height="76dp"
-                android:layout_marginTop="6dp"
-                android:scaleType="centerInside" />
+                android:layout_height="0dp"
+                android:layout_marginTop="4dp"
+                android:layout_weight="1"
+                android:scaleType="fitCenter" />
         </LinearLayout>
 
         <FrameLayout
-            android:layout_width="12dp"
+            android:layout_width="10dp"
             android:layout_height="match_parent" />
 
         <LinearLayout
@@ -74,27 +74,25 @@
             android:layout_weight="1"
             android:background="@drawable/bg_stop"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="6dp">
 
-            <FrameLayout
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:background="@drawable/bg_icon_circle">
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_stop_x" />
-            </FrameLayout>
+            <ImageView
+                android:id="@+id/btn_stop_icon"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:importantForAccessibility="no"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_stop_badge" />
 
             <ImageView
                 android:id="@+id/stop_label"
                 android:layout_width="match_parent"
-                android:layout_height="76dp"
-                android:layout_marginTop="6dp"
-                android:scaleType="centerInside" />
+                android:layout_height="0dp"
+                android:layout_marginTop="4dp"
+                android:layout_weight="1"
+                android:scaleType="fitCenter" />
         </LinearLayout>
 
     </LinearLayout>
@@ -102,146 +100,99 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="2dp"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/bg_divider" />
 
     <LinearLayout
+        android:id="@+id/lists"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="4"
+        android:layout_weight="3.6"
         android:orientation="vertical">
 
         <ImageView
             android:id="@+id/empty"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="8dp"
-            android:scaleType="centerInside"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
             android:visibility="gone" />
 
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/pl_row_0"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="6dp"
             android:background="@drawable/wg_pl_0"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="18dp"
-            android:paddingEnd="14dp">
+            android:paddingStart="14dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="4dp">
 
             <ImageView
                 android:id="@+id/pl_name_0"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:scaleType="fitStart" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter" />
+        </FrameLayout>
 
-            <ImageView
-                android:id="@+id/pl_chip_0"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_chip"
-                android:paddingStart="10dp"
-                android:paddingTop="5dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="5dp"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/pl_row_1"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="6dp"
             android:background="@drawable/wg_pl_1"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="18dp"
-            android:paddingEnd="14dp">
+            android:paddingStart="14dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="4dp">
 
             <ImageView
                 android:id="@+id/pl_name_1"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:scaleType="fitStart" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter" />
+        </FrameLayout>
 
-            <ImageView
-                android:id="@+id/pl_chip_1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_chip"
-                android:paddingStart="10dp"
-                android:paddingTop="5dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="5dp"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/pl_row_2"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="6dp"
             android:background="@drawable/wg_pl_2"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="18dp"
-            android:paddingEnd="14dp">
+            android:paddingStart="14dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="4dp">
 
             <ImageView
                 android:id="@+id/pl_name_2"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:scaleType="fitStart" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter" />
+        </FrameLayout>
 
-            <ImageView
-                android:id="@+id/pl_chip_2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_chip"
-                android:paddingStart="10dp"
-                android:paddingTop="5dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="5dp"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/pl_row_3"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="6dp"
             android:background="@drawable/wg_pl_3"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="18dp"
-            android:paddingEnd="14dp">
+            android:paddingStart="14dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="4dp">
 
             <ImageView
                 android:id="@+id/pl_name_3"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:scaleType="fitStart" />
-
-            <ImageView
-                android:id="@+id/pl_chip_3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_chip"
-                android:paddingStart="10dp"
-                android:paddingTop="5dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="5dp"
-                android:visibility="gone" />
-        </LinearLayout>
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter" />
+        </FrameLayout>
 
     </LinearLayout>
 </LinearLayout>

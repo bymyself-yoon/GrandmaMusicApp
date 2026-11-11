@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 위젯 잠김 화면: 회색 바탕 + 가운데 노란 "노래 듣기" 버튼 하나.
+     버튼을 누르면 잠금만 풀리고 노래는 안 나와 (우연히 노래가 나오는 걸 막으려고).
+     버튼 글씨 그림 크기는 MusicWidgetProvider.kt에서 위젯 크기에 맞게 계산해. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_widget_locked"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/btn_unlock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_unlock"
+        android:contentDescription="노래 듣기"
+        android:paddingStart="22dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="14dp"
+        android:scaleType="fitCenter" />
+</FrameLayout>

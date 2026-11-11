@@ -30,6 +30,7 @@ import com.suyuni.grandmamusic.R
 import com.suyuni.grandmamusic.data.Prefs
 import com.suyuni.grandmamusic.data.Repository
 import com.suyuni.grandmamusic.ui.MainActivity
+import com.suyuni.grandmamusic.widget.WidgetLock
 import com.suyuni.grandmamusic.widget.WidgetUpdater
 
 /**
@@ -195,10 +196,15 @@ class PlaybackService : MediaSessionService() {
         prefs.savePosition(id, player.currentMediaItemIndex, player.currentPosition)
     }
 
+    private var wasPlaying = false
+
     private fun publish() {
         val playing = player.playWhenReady &&
             player.playbackState != Player.STATE_ENDED &&
             player.mediaItemCount > 0
+        // 노래가 멈추면 위젯은 1분 동안 열어두고 그 뒤 다시 잠가
+        if (wasPlaying && !playing) WidgetLock.keepOpenAfterStop(this)
+        wasPlaying = playing
         val song = player.currentMediaItem?.mediaMetadata?.title?.toString()
         if (song != null) prefs.currentSongTitle = song
         PlayerState.set(loadedPlaylistId ?: prefs.currentPlaylistId, playing, song ?: prefs.currentSongTitle)
